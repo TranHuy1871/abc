@@ -1,1 +1,45 @@
-123
+using FPTS.FIT.INT.Interest.Services.Interest.App.Application.Commands;
+using FPTS.FIT.INT.Interest.Services.Interest.Domain.AggregateModels.InterestAggregate;
+using FPTS.FIT.INT.Interest.Services.Interest.Infrastructure.Database;
+using FPTS.FIT.INT.Interest.Services.Interest.Infrastructure.Repositories;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace FPTS.FIT.INT.Services.Interest.Tests.Unit.Application
+{
+    public class InterestCommandHandlerTest
+    {
+        private readonly Mock<ILogger<InterestCommandHandler>> _loggerMock;
+        private readonly Mock<IMediator> _mediatorMock;
+
+        public InterestCommandHandlerTest()
+        {
+            _loggerMock = new Mock<ILogger<InterestCommandHandler>>();
+            _mediatorMock = new Mock<IMediator>();
+        }
+
+        [Fact]
+        public async Task Handler_should_return_succes()
+        {
+            //Arrange
+            var optionBuilder = new DbContextOptionsBuilder<InterestCashDbContext>().UseInMemoryDatabase("Fake");
+            InterestCashDbContext context = new InterestCashDbContext(optionBuilder.Options, _mediatorMock.Object);
+            var repository = new PersistentInterestCashRepository(context);
+            var service = new Mock<IServiceScopeFactory>(repository);
+
+            var command = new InterestCommand("abc", 1000, "abc", DateTime.Now, INT.Interest.Services.Interest.Domain.AggregateModels.InterestAggregate.Source.FSaving);
+
+            //Action
+            var handler = new InterestCommandHandler(service.Object, _loggerMock.Object);
+            var actual = await handler.Handle(command, default);
+
+            //Assert
+            Assert.True(actual);
+        }
+    }
+}
